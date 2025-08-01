@@ -130,7 +130,7 @@ feature_names = vectorizer.get_feature_names_out()
 
 
 # --- 6. Search Function ---
-def search(query, top_n=5):
+def search(query, top_n=5 ):
     """
     Performs a search on the documents.
     1. Preprocesses the query.
@@ -163,7 +163,7 @@ def search(query, top_n=5):
     top_doc_indices = np.argsort(cosine_similarities)[-top_n:][::-1]
 
     # --- Display Results ---
-    print(f"\n--- Search Results for '{query}' ---")
+    # print(f"\n--- Search Results for '{query}' ---")
     for i, idx in enumerate(top_doc_indices):
         # We only show results with a similarity score > 0
         if cosine_similarities[idx] > 0:
@@ -171,7 +171,9 @@ def search(query, top_n=5):
             original_doc = documents[doc_id]
             score = cosine_similarities[idx]
             print(f"{i+1}. Document: {doc_id} (Score: {score:.4f})")
+            print(f"\n")
             print(f"   Content: {original_doc}\n")
+            print(f"\n")
 
 # --- 7. Main Execution Block (Command-Line Interface) ---
 if __name__ == "__main__":
