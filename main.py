@@ -26,20 +26,36 @@ except LookupError:
     nltk.download('punkt_tab')
 
 
-# --- 2. Sample Dataset ---
-# A collection of documents (e.g., news articles, reviews)
-documents = {
-    "doc1": "The European Union has approved a new set of sanctions against Russia over its actions in Ukraine.",
-    "doc2": "SpaceX successfully launched a new batch of Starlink satellites, aiming to provide global internet coverage.",
-    "doc3": "Researchers have discovered a new species of deep-sea fish with bioluminescent properties.",
-    "doc4": "The global stock market saw a significant dip this week due to rising inflation concerns and new interest rate hikes.",
-    "doc5": "A new blockbuster movie about space exploration and alien contact has received rave reviews from critics.",
-    "doc6": "The government announced new environmental policies to combat climate change, focusing on renewable energy.",
-    "doc7": "Health officials are urging the public to get vaccinated as a new flu season approaches.",
-    "doc8": "The price of oil surged after a major pipeline was disrupted, affecting global supply chains.",
-    "doc9": "A new study suggests that regular exercise can significantly improve mental health and reduce stress.",
-    "doc10": "Tech giant releases a new smartphone with advanced camera features and a faster processor."
-}
+# --- 2. Load Dataset from File ---
+def load_documents_from_file(filepath):
+    """
+    Loads documents from a text file.
+    Each line should be either:
+      - 'doc_id: document content'
+      - or just 'document content' (IDs will be auto-generated)
+    Returns a dictionary: {doc_id: content}
+    """
+    documents = {}
+    with open(filepath, 'r', encoding='utf-8') as f:
+        for idx, line in enumerate(f):
+            line = line.strip()
+            if not line:
+                continue
+            if ':' in line and line.split(':', 1)[0].startswith('doc'):
+                doc_id, content = line.split(':', 1)
+                doc_id = doc_id.strip()
+                content = content.strip()
+            else:
+                doc_id = f"doc{idx+1}"
+                content = line
+            documents[doc_id] = content
+    return documents
+
+# Specify your dataset file path here
+# DATASET_FILE = "IMDB Dataset.csv"
+DATASET_FILE = "Articles.csv"
+
+documents = load_documents_from_file(DATASET_FILE)
 
 # --- 3. Text Preprocessing ---
 def preprocess_text(text):
@@ -160,6 +176,7 @@ def search(query, top_n=5):
 # --- 7. Main Execution Block (Command-Line Interface) ---
 if __name__ == "__main__":
     print("--- Simple Search Engine ---")
+    print(f"Loaded {len(documents)} documents from '{DATASET_FILE}'.")
     print("An inverted index has been created from the sample documents.")
     print("A TF-IDF Vectorizer has been trained on the document set.")
     print("Type your query below or type 'exit' to quit.")
