@@ -1,6 +1,7 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, font
 import threading
+import re
 from main import initialize_search_engine, search, documents
 
 class ModernSearchGUI:
@@ -22,7 +23,9 @@ class ModernSearchGUI:
             'border': '#e2e8f0',
             'hover': '#f8fafc',
             'success': '#10b981',
-            'error': '#ef4444'
+            'error': '#ef4444',
+            'highlight': '#fef3c7',  # Yellow highlight for query terms
+            'highlight_border': '#fbbf24'
         }
         
         self.is_initialized = False
@@ -61,11 +64,18 @@ class ModernSearchGUI:
         header_inner.pack(fill=tk.X, padx=2, pady=2)
         
         title_label = tk.Label(header_inner,
-                              text="🔍 Document Search",
+                              text="🔍 Smart Document Search",
                               font=('Arial', 24, 'bold'),
                               bg=self.colors['card_bg'],
                               fg=self.colors['primary'])
-        title_label.pack(pady=20)
+        title_label.pack(pady=15)
+        
+        subtitle_label = tk.Label(header_inner,
+                                 text="✓ Spell Correction  •  ✓ Query Highlighting",
+                                 font=('Arial', 10),
+                                 bg=self.colors['card_bg'],
+                                 fg=self.colors['text_light'])
+        subtitle_label.pack(pady=(0, 10))
         
         # Status label
         self.status_label = tk.Label(header_inner,
@@ -203,7 +213,7 @@ class ModernSearchGUI:
         msg_label.pack()
         
         sub_label = tk.Label(empty_frame,
-                           text="Enter a query above to search through documents",
+                           text="Enter a query above - typos will be auto-corrected!",
                            font=('Arial', 12),
                            bg=self.colors['card_bg'],
                            fg=self.colors['text_light'])
@@ -262,8 +272,8 @@ class ModernSearchGUI:
             return
         
         # Display each result
-        for i, (doc_id, score, content) in enumerate(results):
-            self.create_result_card(doc_id, score, content, i)
+        for i, (doc_id, score, content, highlighted_content, query_terms) in enumerate(results):
+            self.create_result_card(doc_id, score, content, highlighted_content, query_terms, i)
     
     def show_no_results(self):
         """Display no results message."""
@@ -289,9 +299,59 @@ class ModernSearchGUI:
                            bg=self.colors['card_bg'],
                            fg=self.colors['text_light'])
         sub_label.pack(pady=(5, 0))
+    
+    def create_highlighted_text(self, parent, text, bg_color):
+        """
+        Create a text widget with highlighted query terms.
+        
+        Args:
+            parent: Parent widget
+            text: Text content with __term__ markers for highlighting
+            bg_color: Background color
+        """
+        # Create text widget
+        text_widget = tk.Text(parent,
+                             wrap=tk.WORD,
+                             font=('Arial', 11),
+                             bg=bg_color,
+                             fg=self.colors['text_light'],
+                             relief=tk.FLAT,
+                             borderwidth=0,
+                             height=6,
+                             cursor="arrow")
+        
+        # Configure tags for highlighting
+        text_widget.tag_configure("highlight", 
+                                 background=self.colors['highlight'],
+                                 foreground=self.colors['text'],
+                                 font=('Arial', 11, 'bold'))
+        
+        # Parse and insert text with highlights
+        pattern = re.compile(r'__(.*?)__')
+        last_end = 0
+        
+        for match in pattern.finditer(text):
+            # Insert text before highlight
+            if match.start() > last_end:
+                text_widget.insert(tk.END, text[last_end:match.start()])
             
-    def create_result_card(self, doc_id, score, content, index):
-        """Create a result card widget."""
+            # Insert highlighted text
+            highlighted_word = match.group(1)
+            text_widget.insert(tk.END, highlighted_word, "highlight")
+            
+            last_end = match.end()
+        
+        # Insert remaining text
+        if last_end < len(text):
+            text_widget.insert(tk.END, text[last_end:])
+        
+        # Make text read-only
+        text_widget.config(state=tk.DISABLED)
+        
+        return text_widget
+            
+    def create_result_card(self, doc_id, score, content, highlighted_content, query_terms, index):
+        """Create a result card widget with highlighted query terms."""
         # Card container with shadow effect
         card_outer = tk.Frame(self.scrollable_frame, 
                              bg=self.colors['border'])
@@ -339,17 +399,23 @@ class ModernSearchGUI:
                               pady=4)
         score_label.pack()
         
-        # Content preview (truncated)
-        display_content = content if len(content) <= 300 else content[:297] + "..."
-        content_label = tk.Label(content_frame,
-                                text=display_content,
-                                font=('Arial', 11),
-                                bg='white',
-                                fg=self.colors['text_light'],
-                                wraplength=900,
-                                justify=tk.LEFT,
-                                anchor=tk.W)
-        content_label.pack(fill=tk.X, pady=(5, 0))
+        # Highlighted content with Text widget
+        display_text = highlighted_content if len(highlighted_content) <= 400 else highlighted_content[:397] + "..."
+        
+        text_widget = self.create_highlighted_text(content_frame, display_text, 'white')
+        text_widget.pack(fill=tk.X, pady=(5, 0))
+        
+        # Query terms info
+        if query_terms:
+            terms_frame = tk.Frame(content_frame, bg='white')
+            terms_frame.pack(fill=tk.X, pady=(10, 0))
+            
+            terms_label = tk.Label(terms_frame,
+                                  text=f"🔍 Matched terms: {', '.join(query_terms)}",
+                                  font=('Arial', 9, 'italic'),
+                                  bg='white',
+                                  fg=self.colors['text_light'])
+            terms_label.pack(anchor=tk.W)
 
 def main():
     """Launch the GUI application."""
