@@ -64,18 +64,20 @@ git clone https://github.com/yourusername/document-search-engine.git
 cd document-search-engine
 ```
 
-### 2. Install Dependencies
-```bash
-pip install -r requirements.txt
-```
-
-### 3. Create Requirements File
+### 2. Create Requirements File
 Create a `requirements.txt` file with:
 ```
 nltk>=3.8.1
 scikit-learn>=1.3.0
 numpy>=1.24.3
 ```
+
+### 3. Install Dependencies
+```bash
+pip install -r requirements.txt
+```
+
+
 
 ### 4. Prepare Your Dataset
 Create an `Articles.csv` file in the project directory with your documents. Format:
